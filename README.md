@@ -1,4 +1,4 @@
-bettersettlers_flash
+bettersettlers_web
 ====================
 
-Actionscript source for flash version of BetterSettlers
+Port of https://github.com/andrewflynn/bettersettlers_flash from Actionscript to Javascript
