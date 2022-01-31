@@ -1,0 +1,2 @@
+- Clicking tile changes unrelated tile
+- Clicking "generate" after customizing map doesn't keep customized one
