@@ -1,22 +1,48 @@
+<style>
+    polygon:hover {
+        /*fill: #fff !important;*/
+    }
+    text.help {
+        color: #000;
+        font-family: Courier New, monospace;
+        font-size: 16pt;
+        font-weight: bold;
+        text-anchor: left;
+    }
+    text.prob {
+        font-family: Courier New, monospace;
+        font-size: 20pt;
+        font-weight: bold;
+        text-anchor: middle;
+        dominant-baseline: middle;
+    }
+</style>
+
 <button id="generate_map_button">Generate Map</button>
+<br>
 <button id="shuffle_probabilities_button">Shuffle Probabilities</button>
+<br>
 <button id="shuffle_harbors_button">Shuffle Harbors</button>
+<br>
 
 <input name="size" type="radio" id="standard_radio" checked>
-<label for="standard_radio">Standard</label>
+<label for="standard_radio">Standard (3-4 people)</label>
+<br>
 
 <input name="size" type="radio" id="large_radio">
-<label for="large_radio">Large</label>
+<label for="large_radio">Large (5 people)</label>
+<br>
 
 <input name="size" type="radio" id="xlarge_radio">
-<label for="xlarge_radio">Extra-Large</label>
+<label for="xlarge_radio">Extra-Large (6 people)</label>
+
+<br>
 
 <button id="reset_map_button">Reset Map</button>
+<br>
 
-
-<svg height="210" width="600">
-    <polygon points="200,10 250,190 160,210" style="fill:lime;stroke:purple;stroke-width:1" />
+<svg height="800" width="800" id="svg">
 </svg>
 
-<canvas id="canvas" width="800" height="800"></canvas>
+<canvas id="canvas" width="800" height="800" style="display: none"></canvas>
 <script type="text/javascript" src="Settlers.js"></script>

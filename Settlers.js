@@ -17,127 +17,46 @@ class Point {
 }
 
 
-// noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
-class Graphics {
-
-	constructor() {
-		this.thickness = 1;
-		this.color = '#000000';
-		this.filling = false;
-		this.fillingColor = '#000000';
-		this.context = canvasContext;
-	}
-
-	lineStyle(thickness, color) {
-		this.thickness = thickness;
-		this.color = color;
-	}
-
-	beginFill(color) {
-		this.context.fillStyle = colors[color];
-	}
-
-	moveTo(x, y) {
-		this.context.moveTo(x, y);
-	}
-
-	lineTo(x, y) {
-		this.context.lineTo(x, y);
-	}
-
-	fill(color) {
-		// this.context.fill();
-	}
-
-	drawCircle(x, y, radius) {
-		this.context.beginPath();
-		this.context.arc(x, y, radius, 0, 2 * Math.PI);
-		this.context.fill();
-		this.context.stroke();
+function setQueryArg(name, value) {
+	// https://stackoverflow.com/a/41542008/471441
+	if ('URLSearchParams' in window) {
+		const searchParams = new URLSearchParams(window.location.search)
+		searchParams.set(name, value);
+		const newRelativePathQuery = window.location.pathname + '?' + searchParams.toString();
+		history.replaceState(null, '', newRelativePathQuery);
 	}
 }
 
 
-// noinspection JSUnusedLocalSymbols
-class Sprite {
-	constructor() {
-		this.graphics = new Graphics();
-		this.context = this.graphics.context;
-		this.children = [];
-	}
-
-	drawHexagon(x, y, color) {
-		color = colors[color];
-		this.context.beginPath();
-		this.graphics.lineStyle(2, 0xFFFFFF);
-		this.graphics.beginFill(color);
-		this.graphics.moveTo(x, y);
-		this.graphics.lineTo(x+xd, y+yd1);
-		this.graphics.lineTo(x+xd, y+yd1+yd2);
-		this.graphics.lineTo(x, y+yd1+yd2+yd1);
-		this.graphics.lineTo(x-xd, y+yd1+yd2);
-		this.graphics.lineTo(x-xd, y+yd1);
-		this.graphics.lineTo(x, y);
-		this.context.fillStyle = color;
-		this.context.fill();
-		this.context.stroke();
-	}
-
-	addEventListener(event, callback) {
-		// TODO
-		// console.log(this, 'addEventListener', event, callback);
-		// throw new Error('Not implemented yet');
-	}
-
-	addChild(child) {
-		this.children.push(child);
-	}
-}
-
-
-// noinspection JSUnusedGlobalSymbols
-class TextField {
-	constructor() {
-		this.textFormat = null;
-	}
-
-	setTextFormat(textFormat) {
-		this.textFormat = textFormat;
-	}
-}
-
-
-class TextFormat {
-
-}
-
-
-class Stage {
-	constructor() {
-		this.children = [];
-	}
-
-	addChild(child) {
-		this.children.push(child);
-	}
-
-	addChildAt(child, position) {
-		this.children.splice(position, 0, child);
-	}
-
-	contains(child) {
-		return this.children.indexOf(child) !== -1;
-	}
-
-	removeChild(child) {
-		const index = this.children.indexOf(child);
-		if (index !== -1) {
-			this.children.splice(index, 1);
+function getQueryArg(name, defaultValue) {
+	if ('URLSearchParams' in window) {
+		const searchParams = new URLSearchParams(window.location.search)
+		const value = searchParams.get(name);
+		if (value !== null) {
+			return value;
 		}
 	}
+	return defaultValue;
 }
 
-const stage = new Stage();
+
+const sizeHandlers = {
+	'standard': shiftToStandard,
+	'large': shiftToLarge,
+	'xlarge': shiftToXlarge,
+}
+
+function init() {
+	const size = getQueryArg('size', 'standard');
+	let elements = document.getElementsByName('size');
+	elements.forEach((elem) => {
+		if (elem.id === `${size}_radio`) {
+			elem.checked = true;
+			sizeHandlers[size]();
+		}
+	});
+}
+
 
 let xd = 40;
 let two_xd = xd * 2;
@@ -177,13 +96,12 @@ RESOURCE_CYCLE[ROCK] = CLAY;
 RESOURCE_CYCLE[CLAY] = WOOD;
 RESOURCE_CYCLE[WOOD] = WHEAT
 RESOURCE_CYCLE[WHEAT] = SHEEP;
-
 RESOURCE_CYCLE[BLANK] = LAND;
 RESOURCE_CYCLE[LAND] = WATER;
 RESOURCE_CYCLE[WATER] = BLANK;
 
-const STARTING_X_VALUE = 190;
-const STARTING_Y_VALUE = 120;
+const STARTING_X_VALUE = 50;
+const STARTING_Y_VALUE = 20;
 
 const BOARD_RANGE_X_VALUE = 14;
 const BOARD_RANGE_Y_VALUE = 8;
@@ -552,8 +470,8 @@ let the_map = new Array(BOARD_RANGE_X_VALUE+1);
 let resource_map = [];
 let probability_map = [];
 let harbor_map = [];
-let help_text = new TextField();
-let help_text_format = new TextFormat();
+
+const svg = document.getElementById('svg');
 
 const canvas = document.getElementById('canvas');
 const canvasContext = canvas.getContext('2d');
@@ -568,16 +486,136 @@ const shuffle_harbors_button = document.getElementById('shuffle_harbors_button')
 shuffle_harbors_button.addEventListener('click', shuffleHarbors);
 
 const standard_radio = document.getElementById('standard_radio');
-standard_radio.addEventListener('click', shiftToStandard);
+standard_radio.addEventListener('click', sizeHandlers['standard']);
 
 const large_radio = document.getElementById('large_radio');
-large_radio.addEventListener('click', shiftToLarge);
+large_radio.addEventListener('click', sizeHandlers['large']);
 
 const xlarge_radio = document.getElementById('xlarge_radio');
-xlarge_radio.addEventListener('click', shiftToXlarge);
+xlarge_radio.addEventListener('click', sizeHandlers['xlarge']);
 
 const reset_map_button = document.getElementById('reset_map_button');
 reset_map_button.addEventListener('click', resetMap);
+
+
+function svgText(x, y, className, contents, options) {
+	if (options === undefined) {
+		options = {};
+	}
+
+	const text = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+	const attrs = {
+		'x': x,
+		'y': y,
+		'class': className,
+	}
+	for (const [key, value] of Object.entries(attrs)) {
+		text.setAttribute(key, value);
+	}
+	if (options.color !== undefined) {
+		text.style.color = colors[options.color];
+	}
+	text.textContent = contents;
+	svg.appendChild(text);
+	return text;
+}
+
+function svgLine(start, end, thickness, color, options) {
+	if (options === undefined) {
+		options = {};
+	}
+
+	const line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+	const attrs = {
+		'x1': start.x,
+		'y1': start.y,
+		'x2': end.x,
+		'y2': end.y,
+	}
+	for (const [key, value] of Object.entries(attrs)) {
+		line.setAttribute(key, value);
+	}
+	if (options.mouseEnabled === false) {
+		line.setAttribute('pointer-events', 'none')
+	}
+
+	line.style.strokeWidth = thickness;
+	line.style.stroke = colors[color];
+	svg.appendChild(line);
+	return line;
+}
+
+
+function svgCircle(x, y, radius, color, options) {
+	if (options === undefined) {
+		options = {};
+	}
+	const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
+	const attrs = {
+		'cx': x,
+		'cy': y,
+		'r': radius,
+		'fill': colors[color],
+		'stroke': 'black',
+		'stroke-width': 3,
+	}
+	for (const [key, value] of Object.entries(attrs)) {
+		circle.setAttribute(key, value);
+	}
+	if (options.mouseEnabled === false) {
+		circle.setAttribute('pointer-events', 'none')
+	}
+
+	svg.appendChild(circle);
+	return circle;
+}
+
+
+function svgPolygon(points, options) {
+	// <polygon points="200,10 250,190 160,210" style="fill:lime;stroke:purple;stroke-width:1" />
+	if (options === undefined) {
+		options = {};
+	}
+	const polygon = document.createElementNS("http://www.w3.org/2000/svg", 'polygon');
+	points = points.map((point) => {
+		if (point instanceof Point) {
+			return `${point.x},${point.y}`
+		}
+		return point;
+	});
+	polygon.setAttribute('points', points.join(' '));
+
+	polygon.style.stroke = 'white';
+	polygon.style.strokeWidth = 1;
+
+	if (options.color !== undefined) {
+		polygon.style.fill = colors[options.color];
+	}
+
+	svg.appendChild(polygon);
+	return polygon;
+}
+
+
+function svgHexagon(points, color) {
+	return svgPolygon(points, {
+		color: color,
+	});
+}
+
+
+function svgTile(x, y, color) {
+	const points = [
+		new Point(x, y),
+		new Point(x+xd, y+yd1),
+		new Point(x+xd, y+yd1+yd2),
+		new Point(x, y+yd1+yd2+yd1),
+		new Point(x-xd, y+yd1+yd2),
+		new Point(x-xd, y+yd1),
+	];
+	return svgHexagon(points, color);
+}
+
 
 /*
 let file = new FileReference();
@@ -627,6 +665,7 @@ function calculateOthers() {
 }
 
 function shiftToStandard(evt) {
+	setQueryArg('size', 'standard');
 	cleanUp(true /* help text */);
 	map_type = STANDARD;
 	available_probabilities = STANDARD_AVAILABLE_PROBABILITIES;
@@ -639,6 +678,7 @@ function shiftToStandard(evt) {
 }
 
 function shiftToLarge(evt) {
+	setQueryArg('size', 'large');
 	cleanUp(true /* help text */);
 	map_type = LARGE;
 	available_probabilities = LARGE_AVAILABLE_PROBABILITIES;
@@ -651,6 +691,7 @@ function shiftToLarge(evt) {
 }
 
 function shiftToXlarge(evt) {
+	setQueryArg('size', 'xlarge');
 	cleanUp(true /* help text */);
 	map_type = XLARGE;
 	available_probabilities = XLARGE_AVAILABLE_PROBABILITIES;
@@ -676,7 +717,7 @@ function resetMap() {
 }
 
 function generateMap(evt) {
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+	svg.innerHTML = '';
 
 	cleanUp(true /* help text */);
 	if (map_type === CUSTOM) {
@@ -796,19 +837,14 @@ function createGlobalMap(showGrid) {
 		}
 	}
 	if (showGrid) {
-		help_text = new TextField();
-		help_text_format = new TextFormat();
-		help_text.text = "Click a hex once for land and twice for ocean.\n"
-		               + "Click 'Generate Map' when done for a fair map!";
-		help_text_format.color = 0x000000;
-		help_text_format.font = "courier new";
-		help_text_format.size = 16;
-		help_text_format.bold = true;
-		help_text.autoSize = 'left';
-		help_text.x = 125;
-		help_text.y = 60;
-		help_text.setTextFormat(help_text_format);
-		stage.addChild(help_text);
+		// stage.addChild(help_text);
+		svgText(
+			125,
+			60,
+			'help',
+			"Click a hex once for land and twice for ocean.\n"
+		    + "Click 'Generate Map' when done for a fair map!"
+		)
 	}
 }
 
@@ -1256,26 +1292,20 @@ function drawBoard(blank) {
 }
 
 function drawWaterHex(x, y, harbor_point) {
-	let hex = new Sprite();
-	hex.drawHexagon(x, y, WATER);
+	let hex = svgTile(x, y, WATER);
 	//hex.addEventListener('mousedown', dragDown);
 	//hex.addEventListener('mouseup', dragUp);
 	//hex.addEventListener('click', clickHex);
 	//hex.addEventListener('mouseover', rollOverHex);
 	let hex_baggage = [];
 	if (harbor_point[0] !== WATER) {
-		let harbor = getHarborLines(x, y, harbor_point);
+		let harborChildren = getHarborLines(x, y, harbor_point);
 		let txt = getHarborNumber(x, y, harbor_point[0]);
-		harbor.mouseEnabled = false;
 		txt.mouseEnabled = false;
-		stage.addChild(harbor);
-		stage.addChild(txt);
-		sprites.push(harbor);
-		sprites.push(txt);
-		hex_baggage.push(harbor);
+		hex_baggage.push(harborChildren);
 		hex_baggage.push(txt);
 	}
-	stage.addChildAt(hex, 0);
+	// stage.addChildAt(hex, 0);
 	sprites.push(hex);
 	hexesToPoints[hex] = new Point(x, y);
 	hexesToColor[hex] = harbor_point[0];
@@ -1284,7 +1314,7 @@ function drawWaterHex(x, y, harbor_point) {
 }
 
 function getHarborLines(x, y, harbor_point) {
-	let h1 = new Sprite();
+	let children = [];
 	let color = harbor_point[0];
 	let dirs;
 	if (color === WATER) {
@@ -1296,43 +1326,45 @@ function getHarborLines(x, y, harbor_point) {
 		color = 0xFFFFFF;
 	}
 
-	h1.graphics.lineStyle(4, color);
-	h1.graphics.beginFill(color);
-
+	const start = new Point(x, y+yd1+yd2/2);
 	dirs.forEach((dir) => {
-		h1.graphics.moveTo(x, y+yd1+yd2/2);
+
+		let end;
 		switch (dir) {
 			case 0:
-				h1.graphics.lineTo(x-xd+4, y+yd1+4);
+				end = new Point(x-xd+4, y+yd1+4);
 				break;
 			case 1:
-				h1.graphics.lineTo(x, y+4);
+				end = new Point(x, y+4);
 				break;
 			case 2:
-				h1.graphics.lineTo(x+xd-4, y+yd1+4);
+				end = new Point(x+xd-4, y+yd1+4);
 				break;
 			case 3:
-				h1.graphics.lineTo(x+xd-4, y+yd1+yd2-4);
+				end = new Point(x+xd-4, y+yd1+yd2-4);
 				break;
 			case 4:
-				h1.graphics.lineTo(x, y+yd1*2+yd2-4);
+				end = new Point(x, y+yd1*2+yd2-4);
 				break;
 			case 5:
-				h1.graphics.lineTo(x-xd+4, y+yd1+yd2-4);
+				end = new Point(x-xd+4, y+yd1+yd2-4);
 				break;
 			default:
+				throw new Error(`Unexpected direction: ${dir}`);
 		}
+		children.push(svgLine(start, end, 4, color, {mouseEnabled: false}));
 	});
-	h1.graphics.drawCircle(x, y+yd1+yd2/2, 15);
-	return h1;
+	children.push(svgCircle(x, y+yd1+yd2/2, 15, color));
+	return children;
 }
+
 
 function getHarborNumber(x, y, color) {
 	let txt;
 	if (color === DESERT) {
-		txt = getProb(x, y+8, 3, 0x000000);
+		txt = getProbText(x, y+8, 3, 0x000000);
 	} else {
-		txt = getProb(x, y+8, 2, 0x000000);
+		txt = getProbText(x, y+8, 2, 0x000000);
 	}
 	txt.mouseEnabled = false;
 	return txt;
@@ -1340,8 +1372,7 @@ function getHarborNumber(x, y, color) {
 
 
 function drawHex(x, y, color, prob, field) {
-	let hex = new Sprite();
-	hex.drawHexagon(x, y, color);
+	let hex = svgTile(x, y, color);
 	//hex.addEventListener('mousedown', pressDown);
 	//hex.addEventListener('mouseup', dragUp);
 	hex.addEventListener('click', clickLandHex);
@@ -1351,28 +1382,25 @@ function drawHex(x, y, color, prob, field) {
 		let txt;
 		let dots;
 		if (prob === 6 || prob === 8) {
-			txt = getProb(x, y, prob, 0xCC0000);
+			txt = getProbText(x, y, prob, 0xCC0000);
 			dots = getDots(x, y, prob, 0xCC0000);
 		} else {
-			txt = getProb(x, y, prob, 0x000000);
+			txt = getProbText(x, y, prob, 0x000000);
 			dots = getDots(x, y, prob, 0x000000);
 		}
 		txt.mouseEnabled = false;
-		stage.addChild(txt);
+		// stage.addChild(txt);
 		sprites.push(txt);
 		hex_baggage.push(txt);
-		dots.mouseEnabled = false;
-		stage.addChild(dots);
-		sprites.push(dots);
-		hex_baggage.push(dots);
+		hex_baggage.push(dots)
 	}
 	if (field != null) {
 		field.mouseEnabled = false;
-		stage.addChild(field);
+		// stage.addChild(field);
 		sprites.push(field);
 		hex_baggage.push(field);
 	}
-	stage.addChildAt(hex, 0);
+	// stage.addChildAt(hex, 0);
 	sprites.push(hex);
 	hexesToPoints[hex] = new Point(x, y);
 	hexesToColor[hex] = color;
@@ -1380,72 +1408,44 @@ function drawHex(x, y, color, prob, field) {
 	hexes.push(hex);
 }
 
-function getProb(x, y, prob, color) {
-	let txt = new TextField();
-	let txt_format = new TextFormat();
-	txt.text = prob;
-	txt_format.color = color;
-	txt_format.font = "courier new";
-	txt_format.size = 20;
-	txt_format.bold = true;
-	txt_format.align = "center";
-	txt.x = x-two_xd/2-10;
-	txt.y = y+ydt/2-5;
-	txt.setTextFormat(txt_format);
-	return txt;
+function getProbText(x, y, prob, color) {
+	return svgText(
+		x-two_xd/2-10,
+		y+ydt/2-5,
+		'prob',
+		prob,
+		{color}
+	);
 }
 
 function getDots(x, y, prob, color) {
-	let dotMaster = new Sprite();
-	// noinspection FallThroughInSwitchStatementJS
+	console.log('getDots', x, y, prob, '#' + color.toString(16).toUpperCase());
+	let dots = [];
 	switch (PROBABILITY_MAPPING[prob]) {
 		case 5:
-			let dot5L = new Sprite();
-			dot5L.graphics.beginFill(color);
-			dot5L.graphics.drawCircle(x-20, y+ydt/2+25, 3);
-			dotMaster.addChild(dot5L);
-			let dot5R = new Sprite();
-			dot5R.graphics.beginFill(color);
-			dot5R.graphics.drawCircle(x+20, y+ydt/2+25, 3);
-			dotMaster.addChild(dot5R);
+			dots.push(svgCircle(x-20, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x+20, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			// fall through
 		case 3:
-			let dot3L = new Sprite();
-			dot3L.graphics.beginFill(color);
-			dot3L.graphics.drawCircle(x-10, y+ydt/2+25, 3);
-			dotMaster.addChild(dot3L);
-			let dot3R = new Sprite();
-			dot3R.graphics.beginFill(color);
-			dot3R.graphics.drawCircle(x+10, y+ydt/2+25, 3);
-			dotMaster.addChild(dot3R);
+			dots.push(svgCircle(x-10, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x+10, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			// fall through
 		case 1:
-			let dot1 = new Sprite();
-			dot1.graphics.beginFill(color);
-			dot1.graphics.drawCircle(x, y+ydt/2+25, 3);
-			dotMaster.addChild(dot1);
+			dots.push(svgCircle(x, y+ydt/2+25, 3, color, {mouseEnabled: false}));
 			break;
 		case 4:
-			let dot4L = new Sprite();
-			dot4L.graphics.beginFill(color);
-			dot4L.graphics.drawCircle(x-15, y+ydt/2+25, 3);
-			dotMaster.addChild(dot4L);
-			let dot4R = new Sprite();
-			dot4R.graphics.beginFill(color);
-			dot4R.graphics.drawCircle(x+15, y+ydt/2+25, 3);
-			dotMaster.addChild(dot4R);
+			dots.push(svgCircle(x-15, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x+15, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			// fall through
 		case 2:
-			let dot2L = new Sprite();
-			dot2L.graphics.beginFill(color);
-			dot2L.graphics.drawCircle(x-5, y+ydt/2+25, 3);
-			dotMaster.addChild(dot2L);
-			let dot2R = new Sprite();
-			dot2R.graphics.beginFill(color);
-			dot2R.graphics.drawCircle(x+5, y+ydt/2+25, 3);
-			dotMaster.addChild(dot2R);
+			dots.push(svgCircle(x-5, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x+5, y+ydt/2+25, 3, color, {mouseEnabled: false}));
 			break;
 		case 0:
 		default:
+			console.log(`Unexpected prob in getDots: ${prob}`);
 	}
-	return dotMaster;
+	return dots;
 }
 
 function nextInt(n) {
@@ -1453,14 +1453,14 @@ function nextInt(n) {
 }
 
 function cleanUp(help) {
-	if (help && stage.contains(help_text)) {
-		stage.removeChild(help_text);
-	}
+	// if (help && stage.contains(help_text)) {
+	// 	stage.removeChild(help_text);
+	// }
 	while (sprites.length > 0) {
 		let tmp_sprite = sprites.pop();
-		if (stage.contains(tmp_sprite)) {
-			stage.removeChild(tmp_sprite);
-		}
+		// if (stage.contains(tmp_sprite)) {
+		// 	stage.removeChild(tmp_sprite);
+		// }
 	}
 	hexesToPoints = {};
 	hexesToColor = {};
@@ -1471,7 +1471,7 @@ function clickLandHex(evt) {
 	let p = hexesToPoints[evt.currentTarget];
 	let color = RESOURCE_CYCLE[hexesToColor[evt.currentTarget]];
 	if (hexesToColor[evt.currentTarget] !== DESERT) {
-		stage.removeChild(evt.currentTarget);
+		// stage.removeChild(evt.currentTarget);
 		drawHex(p.x, p.y, color, null, null);
 	}
 	if (map_type === CUSTOM) {
@@ -1653,3 +1653,6 @@ function removePointFromArray(pt, arr) {
 		arr.unshift(tempPt);
 	}
 }
+
+
+init();
