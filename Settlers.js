@@ -17,6 +17,15 @@ class Point {
 }
 
 
+function intToColor(intColor) {
+	let hex = intColor.toString(16);
+	console.assert(hex.length <= 6);
+	let pad = 6 - hex.length;
+	hex = '#' + '0'.repeat(pad) + hex;
+	return hex;
+}
+
+
 function setQueryArg(name, value) {
 	// https://stackoverflow.com/a/41542008/471441
 	if ('URLSearchParams' in window) {
@@ -79,17 +88,6 @@ const DESERT = 0xFFCC32;
 const BLANK = 0x111111;
 const LAND = 0x939331;
 
-const colors = {}
-colors[SHEEP] = '#00CD00'
-colors[ROCK] = '#808080'
-colors[CLAY] = '#560000'
-colors[WOOD] = '#004B00'
-colors[WATER] = '#0066CC'
-colors[WHEAT] = '#FFFF00'
-colors[DESERT] = '#FFCC32'
-colors[BLANK] = '#111111'
-colors[LAND] = '#939331'
-
 const RESOURCE_CYCLE = {};
 RESOURCE_CYCLE[SHEEP] = ROCK;
 RESOURCE_CYCLE[ROCK] = CLAY;
@@ -100,8 +98,8 @@ RESOURCE_CYCLE[BLANK] = LAND;
 RESOURCE_CYCLE[LAND] = WATER;
 RESOURCE_CYCLE[WATER] = BLANK;
 
-const STARTING_X_VALUE = 50;
-const STARTING_Y_VALUE = 20;
+const STARTING_X_VALUE = 190;
+const STARTING_Y_VALUE = 120;
 
 const BOARD_RANGE_X_VALUE = 14;
 const BOARD_RANGE_Y_VALUE = 8;
@@ -513,9 +511,9 @@ function svgText(x, y, className, contents, options) {
 		text.setAttribute(key, value);
 	}
 	if (options.color !== undefined) {
-		text.style.color = colors[options.color];
+		text.style.fill = intToColor(options.color);
 	}
-	text.textContent = contents;
+	text.innerHTML = contents;
 	svg.appendChild(text);
 	return text;
 }
@@ -540,7 +538,7 @@ function svgLine(start, end, thickness, color, options) {
 	}
 
 	line.style.strokeWidth = thickness;
-	line.style.stroke = colors[color];
+	line.style.stroke = intToColor(color);
 	svg.appendChild(line);
 	return line;
 }
@@ -555,9 +553,12 @@ function svgCircle(x, y, radius, color, options) {
 		'cx': x,
 		'cy': y,
 		'r': radius,
-		'fill': colors[color],
+		'fill': intToColor(color),
 		'stroke': 'black',
 		'stroke-width': 3,
+	}
+	if (options.strokeWidth !== undefined) {
+		attrs['stroke-width'] = options.strokeWidth;
 	}
 	for (const [key, value] of Object.entries(attrs)) {
 		circle.setAttribute(key, value);
@@ -589,7 +590,7 @@ function svgPolygon(points, options) {
 	polygon.style.strokeWidth = 1;
 
 	if (options.color !== undefined) {
-		polygon.style.fill = colors[options.color];
+		polygon.style.fill = intToColor(options.color);
 	}
 
 	svg.appendChild(polygon);
@@ -842,7 +843,7 @@ function createGlobalMap(showGrid) {
 			125,
 			60,
 			'help',
-			"Click a hex once for land and twice for ocean.\n"
+			"Click a hex once for land and twice for ocean.<br>"
 		    + "Click 'Generate Map' when done for a fair map!"
 		)
 	}
@@ -1410,8 +1411,8 @@ function drawHex(x, y, color, prob, field) {
 
 function getProbText(x, y, prob, color) {
 	return svgText(
-		x-two_xd/2-10,
-		y+ydt/2-5,
+		x,
+		y + ydt / 2 + 8,
 		'prob',
 		prob,
 		{color}
@@ -1419,27 +1420,31 @@ function getProbText(x, y, prob, color) {
 }
 
 function getDots(x, y, prob, color) {
-	console.log('getDots', x, y, prob, '#' + color.toString(16).toUpperCase());
 	let dots = [];
+	let options = {
+		mouseEnabled: false,
+		strokeWidth: 0,
+	};
+	let radius = 4;
 	switch (PROBABILITY_MAPPING[prob]) {
 		case 5:
-			dots.push(svgCircle(x-20, y+ydt/2+25, 3, color, {mouseEnabled: false}));
-			dots.push(svgCircle(x+20, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x-20, y+ydt/2+25, radius, color, options));
+			dots.push(svgCircle(x+20, y+ydt/2+25, radius, color, options));
 			// fall through
 		case 3:
-			dots.push(svgCircle(x-10, y+ydt/2+25, 3, color, {mouseEnabled: false}));
-			dots.push(svgCircle(x+10, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x-10, y+ydt/2+25, radius, color, options));
+			dots.push(svgCircle(x+10, y+ydt/2+25, radius, color, options));
 			// fall through
 		case 1:
-			dots.push(svgCircle(x, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x, y+ydt/2+25, radius, color, options));
 			break;
 		case 4:
-			dots.push(svgCircle(x-15, y+ydt/2+25, 3, color, {mouseEnabled: false}));
-			dots.push(svgCircle(x+15, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x-15, y+ydt/2+25, radius, color, options));
+			dots.push(svgCircle(x+15, y+ydt/2+25, radius, color, options));
 			// fall through
 		case 2:
-			dots.push(svgCircle(x-5, y+ydt/2+25, 3, color, {mouseEnabled: false}));
-			dots.push(svgCircle(x+5, y+ydt/2+25, 3, color, {mouseEnabled: false}));
+			dots.push(svgCircle(x-5, y+ydt/2+25, radius, color, options));
+			dots.push(svgCircle(x+5, y+ydt/2+25, radius, color, options));
 			break;
 		case 0:
 		default:
