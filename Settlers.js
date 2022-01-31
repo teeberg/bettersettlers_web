@@ -25,31 +25,35 @@ class Graphics {
 		this.color = '#000000';
 		this.filling = false;
 		this.fillingColor = '#000000';
-		this.pos = new Point();
+		this.context = canvasContext;
 	}
 
 	lineStyle(thickness, color) {
 		this.thickness = thickness;
 		this.color = color;
 	}
+
 	beginFill(color) {
-		this.filling = true;
-		this.fillingColor = color;
+		this.context.fillStyle = colors[color];
 	}
 
 	moveTo(x, y) {
-		this.pos.x = x;
-		this.pos.y = y;
+		this.context.moveTo(x, y);
 	}
 
 	lineTo(x, y) {
-		// TODO
-		throw new Error('Not implemented yet');
+		this.context.lineTo(x, y);
+	}
+
+	fill(color) {
+		// this.context.fill();
 	}
 
 	drawCircle(x, y, radius) {
-		// TODO
-		throw new Error('Not implemented yet');
+		this.context.beginPath();
+		this.context.arc(x, y, radius, 0, 2 * Math.PI);
+		this.context.fill();
+		this.context.stroke();
 	}
 }
 
@@ -58,10 +62,13 @@ class Graphics {
 class Sprite {
 	constructor() {
 		this.graphics = new Graphics();
+		this.context = this.graphics.context;
 		this.children = [];
 	}
 
 	drawHexagon(x, y, color) {
+		color = colors[color];
+		this.context.beginPath();
 		this.graphics.lineStyle(2, 0xFFFFFF);
 		this.graphics.beginFill(color);
 		this.graphics.moveTo(x, y);
@@ -71,11 +78,15 @@ class Sprite {
 		this.graphics.lineTo(x-xd, y+yd1+yd2);
 		this.graphics.lineTo(x-xd, y+yd1);
 		this.graphics.lineTo(x, y);
+		this.context.fillStyle = color;
+		this.context.fill();
+		this.context.stroke();
 	}
 
 	addEventListener(event, callback) {
 		// TODO
-		throw new Error('Not implemented yet');
+		// console.log(this, 'addEventListener', event, callback);
+		// throw new Error('Not implemented yet');
 	}
 
 	addChild(child) {
@@ -129,10 +140,10 @@ class Stage {
 const stage = new Stage();
 
 let xd = 40;
-let xdt = xd*2;
+let two_xd = xd * 2;
 let yd1 = 27;
 let yd2 = 42;
-let ydt = yd1+yd2;
+let ydt = yd1 + yd2;
 
 const STANDARD = -1;
 const LARGE = -2;
@@ -148,6 +159,17 @@ const WHEAT = 0xFFFF00;
 const DESERT = 0xFFCC32;
 const BLANK = 0x111111;
 const LAND = 0x939331;
+
+const colors = {}
+colors[SHEEP] = '#00CD00'
+colors[ROCK] = '#808080'
+colors[CLAY] = '#560000'
+colors[WOOD] = '#004B00'
+colors[WATER] = '#0066CC'
+colors[WHEAT] = '#FFFF00'
+colors[DESERT] = '#FFCC32'
+colors[BLANK] = '#111111'
+colors[LAND] = '#939331'
 
 const RESOURCE_CYCLE = {};
 RESOURCE_CYCLE[SHEEP] = ROCK;
@@ -170,7 +192,8 @@ const BOARD_RANGE_Y_VALUE = 8;
  * Mapping between the numbers that are shown (rolled on the dice) and the probability of each
  * being rolled.
  */
-const PROBABILITY_MAPPING = [0,  // 0
+const PROBABILITY_MAPPING = [
+	0,  // 0
     0,  // 1
     1,  // 2
     2,  // 3
@@ -182,7 +205,8 @@ const PROBABILITY_MAPPING = [0,  // 0
     4,  // 9
     3,  // 10
     2,  // 11
-    1]; // 12
+    1,  // 12
+];
 
 let map_type;
 let num_of_sheep;
@@ -202,58 +226,105 @@ let land_intersections;
 
 // 2  3  4  5 6
 // 12 11 10 9 8
-const DEFAULT_AVAILABLE_PROBABILITIES = [5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
-			5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
-			5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
-			5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
-			5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
-			5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12];
+const DEFAULT_AVAILABLE_PROBABILITIES = [
+	5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
+	5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
+	5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
+	5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
+	5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
+	5, 11, 9, 3, 10, 4, 8, 2, 6, 12, 5, 11, 9, 3, 10, 4, 8, 2, 6, 12,
+];
 
-const DEFAULT_AVAILABLE_RESOURCES = [SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
-			SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT];
+const DEFAULT_AVAILABLE_RESOURCES = [
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+	SHEEP, WOOD, WHEAT, CLAY, ROCK, SHEEP, WOOD, WHEAT, CLAY, ROCK, DESERT,
+];
 
-const DEFAULT_AVAILABLE_HARBORS = [DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
-			DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
-			DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
-			DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
-			DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
-			DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT];
+const DEFAULT_AVAILABLE_HARBORS = [
+	DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
+	DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
+	DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
+	DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
+	DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
+	DESERT, SHEEP, DESERT, WOOD, WHEAT, DESERT, CLAY, ROCK, DESERT,
+];
 
-const STANDARD_AVAILABLE_PROBABILITIES = [2, 3, 3,
-			4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12];
+const STANDARD_AVAILABLE_PROBABILITIES = [
+	2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12,
+];
 
-const STANDARD_AVAILABLE_RESOURCES = [SHEEP, SHEEP, SHEEP, SHEEP,
-			WHEAT, WHEAT, WHEAT, WHEAT,
-			WOOD, WOOD,	WOOD, WOOD,
-			ROCK, ROCK,	ROCK, CLAY,
-			CLAY, CLAY,	DESERT];
+const STANDARD_AVAILABLE_RESOURCES = [
+	SHEEP, SHEEP, SHEEP, SHEEP,
+	WHEAT, WHEAT, WHEAT, WHEAT,
+	WOOD, WOOD,	WOOD, WOOD,
+	ROCK, ROCK,	ROCK, CLAY,
+	CLAY, CLAY,	DESERT,
+];
 
-const STANDARD_AVAILABLE_HARBORS = [SHEEP, WHEAT, WOOD, ROCK, CLAY,
-			DESERT, DESERT, DESERT,	DESERT];
+const STANDARD_AVAILABLE_HARBORS = [
+	SHEEP,
+	WHEAT,
+	WOOD,
+	ROCK,
+	CLAY,
+	DESERT,
+	DESERT,
+	DESERT,
+	DESERT,
+];
 
-const STANDARD_LAND_GRID = [new Point(4, 2),
-			new Point(6, 2), new Point(8, 2), new Point(3, 3), new Point(5, 3),
-			new Point(7, 3), new Point(9, 3), new Point(2, 4), new Point(4, 4),
-			new Point(6, 4), new Point(8, 4), new Point(10, 4),
-			new Point(3, 5), new Point(5, 5), new Point(7, 5), new Point(9, 5),
-			new Point(4, 6), new Point(6, 6), new Point(8, 6)];
+const STANDARD_LAND_GRID = [
+	new Point(4, 2),
+	new Point(6, 2),
+	new Point(8, 2),
+	new Point(3, 3),
+	new Point(5, 3),
+	new Point(7, 3),
+	new Point(9, 3),
+	new Point(2, 4),
+	new Point(4, 4),
+	new Point(6, 4),
+	new Point(8, 4),
+	new Point(10, 4),
+	new Point(3, 5),
+	new Point(5, 5),
+	new Point(7, 5),
+	new Point(9, 5),
+	new Point(4, 6),
+	new Point(6, 6),
+	new Point(8, 6),
+];
 
-const STANDARD_WATER_GRID = [new Point(3, 1),
-			new Point(5, 1), new Point(7, 1), new Point(9, 1),
-			new Point(10, 2), new Point(11, 3), new Point(12, 4),
-			new Point(11, 5), new Point(10, 6), new Point(9, 7),
-			new Point(7, 7), new Point(5, 7), new Point(3, 7), new Point(2, 6),
-			new Point(1, 5), new Point(0, 4), new Point(1, 3), new Point(2, 2)];
+const STANDARD_WATER_GRID = [
+	new Point(3, 1),
+	new Point(5, 1),
+	new Point(7, 1),
+	new Point(9, 1),
+	new Point(10, 2),
+	new Point(11, 3),
+	new Point(12, 4),
+	new Point(11, 5),
+	new Point(10, 6),
+	new Point(9, 7),
+	new Point(7, 7),
+	new Point(5, 7),
+	new Point(3, 7),
+	new Point(2, 6),
+	new Point(1, 5),
+	new Point(0, 4),
+	new Point(1, 3),
+	new Point(2, 2),
+];
 
 /**
  * LARGE BOARD (5 ppl)
@@ -265,31 +336,35 @@ const LARGE_AVAILABLE_PROBABILITIES = [2,3,3,4,4,5,5,6,6,8,8,8,9,9,9,10,10,10,11
  * LARGE BOARD (5 ppl)
  * List of how many of each resource this type of board contains
  */
-const LARGE_AVAILABLE_RESOURCES = [SHEEP, SHEEP, SHEEP, SHEEP, SHEEP,  // 5 Sheep
-		WHEAT, WHEAT, WHEAT, WHEAT, WHEAT,  // 5 Wheat
-		WOOD, WOOD, WOOD, WOOD, WOOD,   // 5 Wood
-		ROCK, ROCK, ROCK, ROCK,   // 4 Rock
-		CLAY, CLAY,	CLAY, CLAY,   // 4 Clay
-		DESERT]; // 1 Desert
+const LARGE_AVAILABLE_RESOURCES = [
+	SHEEP, SHEEP, SHEEP, SHEEP, SHEEP,  // 5 Sheep
+	WHEAT, WHEAT, WHEAT, WHEAT, WHEAT,  // 5 Wheat
+	WOOD, WOOD, WOOD, WOOD, WOOD,   // 5 Wood
+	ROCK, ROCK, ROCK, ROCK,   // 4 Rock
+	CLAY, CLAY,	CLAY, CLAY,   // 4 Clay
+	DESERT,   // 1 Desert
+];
 
 /**
  * LARGE BOARD (5 ppl)
  * List of how many of harbors there are (desert is 3:1)
  */
-const LARGE_AVAILABLE_HARBORS = [SHEEP,  // 1 Sheep 2:1
-		WHEAT,  // 1 Wheat 2:1
-		WOOD,   // 1 Wood 2:1
-		ROCK,   // 1 Rock 2:1
-		CLAY,   // 1 Clay 2:1
-		DESERT, // 5 3:1's
-		DESERT,
-		DESERT,
-		DESERT,
-		DESERT];
+const LARGE_AVAILABLE_HARBORS = [
+	SHEEP,  // 1 Sheep 2:1
+	WHEAT,  // 1 Wheat 2:1
+	WOOD,   // 1 Wood 2:1
+	ROCK,   // 1 Rock 2:1
+	CLAY,   // 1 Clay 2:1
+	DESERT, // 5 3:1's
+	DESERT,
+	DESERT,
+	DESERT,
+	DESERT,
+];
 
 /**
  * LARGE BOARD (5 ppl)
- * The (x,y) pixels of the TL corner of each land hexagon for drawing purposes.
+ * The (x,y) coordinates of the top left corner of each land hexagon for drawing purposes.
  */
 const LARGE_LAND_GRID = [
 	new Point(4,2),  // 0
@@ -320,7 +395,7 @@ const LARGE_LAND_GRID = [
 
 /**
  * LARGE BOARD (5 ppl)
- * The (x,y) pixels of the TL corner of each ocean hexagon for drawing purposes.
+ * The (x,y) coordinates of the top left corner of each ocean hexagon for drawing purposes.
  */
 const LARGE_WATER_GRID = [
 	new Point(3,1),  // 0
@@ -480,6 +555,9 @@ let harbor_map = [];
 let help_text = new TextField();
 let help_text_format = new TextFormat();
 
+const canvas = document.getElementById('canvas');
+const canvasContext = canvas.getContext('2d');
+
 const generate_map_button = document.getElementById('generate_map_button');
 generate_map_button.addEventListener('click', generateMap);
 
@@ -492,7 +570,7 @@ shuffle_harbors_button.addEventListener('click', shuffleHarbors);
 const standard_radio = document.getElementById('standard_radio');
 standard_radio.addEventListener('click', shiftToStandard);
 
-const large_radio = document.getElementById('standard_radio');
+const large_radio = document.getElementById('large_radio');
 large_radio.addEventListener('click', shiftToLarge);
 
 const xlarge_radio = document.getElementById('xlarge_radio');
@@ -598,6 +676,8 @@ function resetMap() {
 }
 
 function generateMap(evt) {
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+
 	cleanUp(true /* help text */);
 	if (map_type === CUSTOM) {
 		let land_len = land_grid.length;
@@ -611,7 +691,7 @@ function generateMap(evt) {
 				available_probabilities.push(DEFAULT_AVAILABLE_PROBABILITIES[l]);
 				available_resources.push(DEFAULT_AVAILABLE_RESOURCES[l]);
 			}
-			for (let w=0; w < water_grid.length; w+=2) {
+			for (let w = 0; w < water_grid.length; w += 2) {
 				available_harbors.push(DEFAULT_AVAILABLE_HARBORS[w]);
 			}
 			// Deal with deserts
@@ -706,7 +786,7 @@ function createGlobalMap(showGrid) {
 				txt_format.size = 20;
 				txt_format.bold = true;
 				txt_format.align = "center";
-				txt.x = temp.x-xdt/2-10;
+				txt.x = temp.x-two_xd/2-10;
 				txt.y = temp.y+ydt/2-5;
 				txt.setTextFormat(txt_format);
 				drawHex(temp.x, temp.y, BLANK, null, txt);
@@ -738,7 +818,7 @@ function getBalancedBoard() {
 	let avail = initAvail();
 	let refill_avail = false;
 
-	while (tried.length!==0 || avail.length!==0) {
+	while (tried.length !== 0 || avail.length !== 0) {
 		if (refill_avail) {
 			avail = avail.concat(tried);
 			tried = [];
@@ -750,7 +830,7 @@ function getBalancedBoard() {
 		} else {
 			// Reshuffle a random number of them
 			let rand = nextInt(avail.length);
-			for (let i=0; i<rand; i++) {
+			for (let i = 0; i < rand; i++) {
 				avail.push(avail.shift());
 			}
 			let resource = avail.pop();
@@ -763,7 +843,7 @@ function getBalancedBoard() {
 				} else {
 					if (set[neighbor] === resource) {
 						can_place_here = false;
-						break;
+						return;
 					} else {
 						// Do nothing, this neighbor isn't the same
 					}
@@ -945,13 +1025,13 @@ function sumProbability(numbers) {
 
 function deepCopy(dict) {
 	let new_dict = {};
-	dict.forEach((resource) => {
+	for (const [resource, probs] of Object.entries(dict)) {
 		let copy = [];
-		dict[resource].forEach((prob) => {
+		probs.forEach((prob) => {
 			copy.push(prob);
 		});
 		new_dict[resource] = copy;
-	});
+	}
 	return new_dict;
 }
 
@@ -1098,10 +1178,12 @@ function getHarbors(resources, probabilities) {
 				facing.forEach((land_ind) => {
 					let land_prob = probabilities[land_ind];
 					let land_res = resources[land_ind];
-					if (land_res === harbors[i][0] && land_prob >=5
-						&& land_prob <=9) {
+					if (
+						land_res === harbors[i][0] &&
+						land_prob >= 5 &&
+						land_prob <=9
+					) {
 						fair = false;
-						break;
 					}
 				});
 			}
@@ -1140,7 +1222,7 @@ function initHarbors() {
 }
 
 function drawBoard(blank) {
-	for (let i=0; i<land_grid.length; i++) {
+	for (let i = 0; i < land_grid.length; i++) {
 		let a = land_grid[i].x;
 		let b = land_grid[i].y;
 		let pt = new Point();
@@ -1307,7 +1389,7 @@ function getProb(x, y, prob, color) {
 	txt_format.size = 20;
 	txt_format.bold = true;
 	txt_format.align = "center";
-	txt.x = x-xdt/2-10;
+	txt.x = x-two_xd/2-10;
 	txt.y = y+ydt/2-5;
 	txt.setTextFormat(txt_format);
 	return txt;
