@@ -1,6 +1,63 @@
 // Copyright 2008 Better Settlers Inc.
 // Author: aflynn@gmail.com (Andrew Flynn)
 
+
+class Point {
+	constructor(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+}
+
+
+// noinspection JSUnusedGlobalSymbols,JSUnusedLocalSymbols
+class Graphics {
+
+	constructor() {
+		this.thickness = 1;
+		this.color = '#000000';
+		this.filling = false;
+		this.fillingColor = '#000000';
+		this.pos = new Point();
+	}
+
+	lineStyle(thickness, color) {
+		this.thickness = thickness;
+		this.color = color;
+	}
+	beginFill(color) {
+		this.filling = true;
+		this.fillingColor = color;
+	}
+
+	moveTo(x, y) {
+		this.pos.x = x;
+		this.pos.y = y;
+	}
+
+	lineTo(x, y) {
+		throw new Error('Not implemented yet');
+	}
+}
+
+
+class Sprite {
+	constructor() {
+		this.graphics = new Graphics();
+	}
+}
+
+
+class TextField {
+
+}
+
+
+class TextFormat {
+
+}
+
+
 let xd = 40;
 let xdt = xd*2;
 let yd1 = 27;
@@ -22,7 +79,7 @@ const DESERT = 0xFFCC32;
 const BLANK = 0x111111;
 const LAND = 0x939331;
 
-const RESOURCE_CYCLE = new Dictionary();
+const RESOURCE_CYCLE = {};
 RESOURCE_CYCLE[SHEEP] = ROCK;
 RESOURCE_CYCLE[ROCK] = CLAY;
 RESOURCE_CYCLE[CLAY] = WOOD;
@@ -127,13 +184,13 @@ const STANDARD_WATER_GRID = [new Point(3, 1),
 			new Point(11, 5), new Point(10, 6), new Point(9, 7),
 			new Point(7, 7), new Point(5, 7), new Point(3, 7), new Point(2, 6),
 			new Point(1, 5), new Point(0, 4), new Point(1, 3), new Point(2, 2)];
-	
+
 /**
  * LARGE BOARD (5 ppl)
  * List of how many of each probability this type of board contains
  */
 const LARGE_AVAILABLE_PROBABILITIES = [2,3,3,4,4,5,5,6,6,8,8,8,9,9,9,10,10,10,11,11,11,12,12];
-	
+
 /**
  * LARGE BOARD (5 ppl)
  * List of how many of each resource this type of board contains
@@ -144,7 +201,7 @@ const LARGE_AVAILABLE_RESOURCES = [SHEEP, SHEEP, SHEEP, SHEEP, SHEEP,  // 5 Shee
 		ROCK, ROCK, ROCK, ROCK,   // 4 Rock
 		CLAY, CLAY,	CLAY, CLAY,   // 4 Clay
 		DESERT]; // 1 Desert
-	
+
 /**
  * LARGE BOARD (5 ppl)
  * List of how many of harbors there are (desert is 3:1)
@@ -159,7 +216,7 @@ const LARGE_AVAILABLE_HARBORS = [SHEEP,  // 1 Sheep 2:1
 		DESERT,
 		DESERT,
 		DESERT];
-	
+
 /**
  * LARGE BOARD (5 ppl)
  * The (x,y) pixels of the TL corner of each land hexagon for drawing purposes.
@@ -188,7 +245,7 @@ const LARGE_LAND_GRID = [new Point(4,2),  // 0
 		new Point(6,6),  // 21
 		new Point(8,6),  // 22
 		new Point(10,6)];  // 23
-	
+
 /**
  * LARGE BOARD (5 ppl)
  * The (x,y) pixels of the TL corner of each ocean hexagon for drawing purposes.
@@ -329,9 +386,9 @@ const XLARGE_WATER_GRID = [new Point(4,0),  // 0
 		new Point(3,1)]; // 21
 
 let sprites = [];
-let hexesToPoints = new Dictionary();
-let hexesToColor = new Dictionary()
-let hexesBaggage = new Dictionary();
+let hexesToPoints = {};
+let hexesToColor = {}
+let hexesBaggage = {};
 let hexes = [];
 
 let the_map = new Array(BOARD_RANGE_X_VALUE+1);
@@ -393,7 +450,7 @@ function calculateOthers() {
 	harbor_lines = getHarborLinePossibilities(water_grid, land_grid);
 	land_neighbors = getAllLandNeighbors(land_grid);
 	water_neighbors = getAllWaterNeighbors(water_grid, land_grid);
-	land_intersections = getIntersections(land_grid, land_neighbors);	
+	land_intersections = getIntersections(land_grid, land_neighbors);
 }
 
 function shiftToStandard(evt) {
@@ -454,7 +511,7 @@ function generateMap(evt) {
 			available_probabilities = [];
 			available_resources = [];
 			available_harbors = [];
-		
+
 			for (l=0; l < land_len; l++) {
 				available_probabilities.push(DEFAULT_AVAILABLE_PROBABILITIES[l]);
 				available_resources.push(DEFAULT_AVAILABLE_RESOURCES[l]);
@@ -471,7 +528,7 @@ function generateMap(evt) {
 			calculateOthers();
 			generate();
 			drawBoard(false /* blank */);
-		} else {			
+		} else {
 			shiftToStandard(evt);
 		}
 	} else {
@@ -583,7 +640,7 @@ function getBalancedBoard() {
 	let tried = [];
 	let avail = initAvail();
 	let refill_avail = false;
-	
+
 	while (tried.length!==0 || avail.length!==0) {
 		if (refill_avail) {
 			avail = avail.concat(tried);
@@ -600,7 +657,7 @@ function getBalancedBoard() {
 				avail.push(avail.shift());
 			}
 			let resource = avail.pop();
-			
+
 			let next_index = set.length;
 			let can_place_here = true;
 			land_neighbors[next_index].forEach((neighbor) => {
@@ -639,14 +696,14 @@ function initAvail() {
 }
 
 function getProbabilities() {
-	let probs = new Dictionary();
+	let probs = {};
 	let numbers = initProbabilities();
 	let sheeps = [];
 	let woods = [];
 	let rocks = [];
 	let clays = [];
 	let wheats = [];
-	
+
 	while (true) {
 		numbers = initProbabilities();
 		sheeps = [];
@@ -654,7 +711,7 @@ function getProbabilities() {
 		rocks = [];
 		clays = [];
 		wheats = [];
-		
+
 		// Assign numbers completely randomly to each resource
 		while (numbers.length !== 0) {
 			// Reshuffle a random number of them
@@ -662,7 +719,7 @@ function getProbabilities() {
 			for (let i=0; i<rand; i++) {
 				numbers.push(numbers.shift());
 			}
-			
+
 			if (sheeps.length < num_of_sheep) {
 				sheeps.push(numbers.pop());
 			}
@@ -679,7 +736,7 @@ function getProbabilities() {
 				clays.push(numbers.pop());
 			}
 		}
-		
+
 		// Try out to see if a) any resource has two of the same numbers or
 		// b) the probability of a single resource is too high or low or
 		// c) within each resource, no one tile has more than half the probability
@@ -703,22 +760,22 @@ function getProbabilities() {
 		}
 		if (noDuplicates(sheeps) && noDuplicates(woods) && noDuplicates(wheats)
 				&& noDuplicates(rocks) && noDuplicates(clays)
-				
+
 				&& sumProbability(sheeps) >= magic_low*num_of_sheep
 				&& sumProbability(sheeps) <= magic_high*num_of_sheep
-				
+
 				&& sumProbability(woods) >= magic_low*num_of_wood
 				&& sumProbability(woods) <= magic_high*num_of_wood
-				
+
 				&& sumProbability(wheats) >= magic_low*num_of_wheat
 				&& sumProbability(wheats) <= magic_high*num_of_wheat
-				
+
 				&& sumProbability(rocks) >= magic_low*num_of_rock
 				&& sumProbability(rocks) <= magic_high*num_of_rock
-				
+
 				&& sumProbability(clays) >= magic_low*num_of_clay
 				&& sumProbability(clays) <= magic_high*num_of_clay
-				
+
 				&& isBalanced(rocks) && isBalanced(clays)) {
 			break;
 		}
@@ -728,7 +785,7 @@ function getProbabilities() {
 	probs[CLAY] = clays;
 	probs[ROCK] = rocks;
 	probs[WHEAT] = wheats;
-	
+
 	return probs;
 }
 
@@ -747,7 +804,7 @@ function initProbabilities() {
 function noDuplicates(numbers) {
 	let num_found = 0;
 	let len = numbers.length;
-	
+
 	while (len > 0) {
 		let num = numbers.pop();
 		len--;
@@ -880,11 +937,11 @@ function checkCollisionsAndProbability(probabilities) {
 function getHarbors(resources, probabilities) {
 	let harbors = [];
 	let left = [];
-	
+
 	while (true) {
 		left = initHarbors();
 		harbors = [];
-		
+
 		// Quick coin-flip to see if we start with a harbor or open ocean
 		if (nextInt(2) !== 0) {
 			while (left.length !== 0 && harbors.length < water_grid.length) {
@@ -893,7 +950,7 @@ function getHarbors(resources, probabilities) {
 				for (let r1=0; r1<rand; r1++) {
 					left.push(left.shift());
 				}
-				
+
 				if (harbors.length < water_grid.length) {
 					let tmp_array = [];
 					tmp_array[0] = left.pop();
@@ -912,7 +969,7 @@ function getHarbors(resources, probabilities) {
 				for (let r2=0; r2<rand; r2++) {
 					left.push(left.shift());
 				}
-				
+
 				if (harbors.length < water_grid.length) {
 					let tmp_array_2b = [];
 					tmp_array_2b[0] = WATER;
@@ -925,14 +982,14 @@ function getHarbors(resources, probabilities) {
 				}
 			}
 		}
-		
+
 		// Fill the rest with water
 		while (harbors.length < water_grid.length) {
 			let tmps = [];
 			tmps[0] = WATER;
 			harbors.push(tmps);
 		}
-		
+
 		// Check to see if things are fair
 		let fair = true;
 		for (let i=0; i<harbors.length; i++) {
@@ -1066,7 +1123,7 @@ function getHarborLines(x, y, harbor_point) {
 	if (color === DESERT) {
 		color = 0xFFFFFF;
 	}
-	
+
 	h1.graphics.lineStyle(4, color);
 	h1.graphics.beginFill(color);
 
@@ -1133,7 +1190,7 @@ function drawHex(x, y, color, prob, field) {
 			dots = getDots(x, y, prob, 0xCC0000);
 		} else {
 			txt = getProb(x, y, prob, 0x000000);
-			dots = getDots(x, y, prob, 0x000000);			
+			dots = getDots(x, y, prob, 0x000000);
 		}
 		txt.mouseEnabled = false;
 		stage.addChild(txt);
@@ -1240,9 +1297,9 @@ function cleanUp(help) {
 			stage.removeChild(tmp_sprite);
 		}
 	}
-	hexesToPoints = new Dictionary();
-	hexesToColor = new Dictionary();
-	hexesBaggage = new Dictionary();
+	hexesToPoints = {};
+	hexesToColor = {};
+	hexesBaggage = {};
 }
 
 function clickLandHex(evt) {
@@ -1316,7 +1373,7 @@ function getHarborLinePossibilities(arrayOfWaterPoints, arrayOfLandPoints) {
 	for (let j=0; j < arrayOfWaterPoints.length; j++) {
 		let pt = arrayOfWaterPoints[j];
 		let arrayOfNeighborPoints = getHexNeighbors(pt.x, pt.y);
-		let harborLines = new Dictionary();
+		let harborLines = {};
 		for (let k=0; k < arrayOfNeighborPoints.length; k++ ){
 			for (let i=0; i < arrayOfLandPoints.length; i++) {
 				if (arrayOfLandPoints[i].equals(arrayOfNeighborPoints[k])) {
