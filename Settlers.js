@@ -7,6 +7,13 @@ class Point {
 		this.x = x;
 		this.y = y;
 	}
+
+	equals(other) {
+		return (
+			this.x === other.x &&
+			this.y === other.y
+		);
+	}
 }
 
 
@@ -36,20 +43,56 @@ class Graphics {
 	}
 
 	lineTo(x, y) {
+		// TODO
+		throw new Error('Not implemented yet');
+	}
+
+	drawCircle(x, y, radius) {
+		// TODO
 		throw new Error('Not implemented yet');
 	}
 }
 
 
+// noinspection JSUnusedLocalSymbols
 class Sprite {
 	constructor() {
 		this.graphics = new Graphics();
+		this.children = [];
+	}
+
+	drawHexagon(x, y, color) {
+		this.graphics.lineStyle(2, 0xFFFFFF);
+		this.graphics.beginFill(color);
+		this.graphics.moveTo(x, y);
+		this.graphics.lineTo(x+xd, y+yd1);
+		this.graphics.lineTo(x+xd, y+yd1+yd2);
+		this.graphics.lineTo(x, y+yd1+yd2+yd1);
+		this.graphics.lineTo(x-xd, y+yd1+yd2);
+		this.graphics.lineTo(x-xd, y+yd1);
+		this.graphics.lineTo(x, y);
+	}
+
+	addEventListener(event, callback) {
+		// TODO
+		throw new Error('Not implemented yet');
+	}
+
+	addChild(child) {
+		this.children.push(child);
 	}
 }
 
 
+// noinspection JSUnusedGlobalSymbols
 class TextField {
+	constructor() {
+		this.textFormat = null;
+	}
 
+	setTextFormat(textFormat) {
+		this.textFormat = textFormat;
+	}
 }
 
 
@@ -57,6 +100,33 @@ class TextFormat {
 
 }
 
+
+class Stage {
+	constructor() {
+		this.children = [];
+	}
+
+	addChild(child) {
+		this.children.push(child);
+	}
+
+	addChildAt(child, position) {
+		this.children.splice(position, 0, child);
+	}
+
+	contains(child) {
+		return this.children.indexOf(child) !== -1;
+	}
+
+	removeChild(child) {
+		const index = this.children.indexOf(child);
+		if (index !== -1) {
+			this.children.splice(index, 1);
+		}
+	}
+}
+
+const stage = new Stage();
 
 let xd = 40;
 let xdt = xd*2;
@@ -221,55 +291,59 @@ const LARGE_AVAILABLE_HARBORS = [SHEEP,  // 1 Sheep 2:1
  * LARGE BOARD (5 ppl)
  * The (x,y) pixels of the TL corner of each land hexagon for drawing purposes.
  */
-const LARGE_LAND_GRID = [new Point(4,2),  // 0
-		new Point(6,2),  // 1
-		new Point(8,2),  // 2
-		new Point(10,2), // 3
-		new Point(3,3),  // 4
-		new Point(5,3),  // 5
-		new Point(7,3),  // 6
-		new Point(9,3),  // 7
-		new Point(11,3), // 8
-		new Point(2,4),  // 9
-		new Point(4,4),  // 10
-		new Point(6,4),  // 11
-		new Point(8,4),  // 12
-		new Point(10,4), // 13
-		new Point(12,4), // 14
-		new Point(3,5),  // 15
-		new Point(5,5),  // 16
-		new Point(7,5),  // 17
-		new Point(9,5),  // 18
-		new Point(11,5), // 19
-		new Point(4,6),  // 20
-		new Point(6,6),  // 21
-		new Point(8,6),  // 22
-		new Point(10,6)];  // 23
+const LARGE_LAND_GRID = [
+	new Point(4,2),  // 0
+	new Point(6,2),  // 1
+	new Point(8,2),  // 2
+	new Point(10,2), // 3
+	new Point(3,3),  // 4
+	new Point(5,3),  // 5
+	new Point(7,3),  // 6
+	new Point(9,3),  // 7
+	new Point(11,3), // 8
+	new Point(2,4),  // 9
+	new Point(4,4),  // 10
+	new Point(6,4),  // 11
+	new Point(8,4),  // 12
+	new Point(10,4), // 13
+	new Point(12,4), // 14
+	new Point(3,5),  // 15
+	new Point(5,5),  // 16
+	new Point(7,5),  // 17
+	new Point(9,5),  // 18
+	new Point(11,5), // 19
+	new Point(4,6),  // 20
+	new Point(6,6),  // 21
+	new Point(8,6),  // 22
+	new Point(10,6)
+];  // 23
 
 /**
  * LARGE BOARD (5 ppl)
  * The (x,y) pixels of the TL corner of each ocean hexagon for drawing purposes.
  */
-const LARGE_WATER_GRID = [new Point(3,1),  // 0
-		new Point(5,1),  // 1
-		new Point(7,1),  // 2
-		new Point(9,1),  // 3
-		new Point(11,1), // 4
-		new Point(12,2), // 5
-		new Point(13,3), // 6
-		new Point(14,4), // 7
-		new Point(13,5), // 8
-		new Point(12,6), // 9
-		new Point(11,7), // 10
-		new Point(9,7),  // 11
-		new Point(7,7),  // 12
-		new Point(5,7),  // 13
-		new Point(3,7),  // 14
-		new Point(2,6),  // 15
-		new Point(1,5),  // 16
-		new Point(0,4),  // 17
-		new Point(1,3),  // 18
-		new Point(2,2)];  // 19
+const LARGE_WATER_GRID = [
+	new Point(3,1),  // 0
+	new Point(5,1),  // 1
+	new Point(7,1),  // 2
+	new Point(9,1),  // 3
+	new Point(11,1), // 4
+	new Point(12,2), // 5
+	new Point(13,3), // 6
+	new Point(14,4), // 7
+	new Point(13,5), // 8
+	new Point(12,6), // 9
+	new Point(11,7), // 10
+	new Point(9,7),  // 11
+	new Point(7,7),  // 12
+	new Point(5,7),  // 13
+	new Point(3,7),  // 14
+	new Point(2,6),  // 15
+	new Point(1,5),  // 16
+	new Point(0,4),  // 17
+	new Point(1,3),  // 18
+	new Point(2,2),  // 19
+];
 
 /**
  * XLARGE BOARD (6 ppl) List of how many of each probability this type of board contains
@@ -279,111 +353,119 @@ const XLARGE_AVAILABLE_PROBABILITIES = [2,2,3,3,3,4,4,4,5,5,5,6,6,6,8,8,8,9,9,9,
 /**
  * XLARGE BOARD (6 ppl) List of how many of each resource this type of board contains
  */
-const XLARGE_AVAILABLE_RESOURCES = [SHEEP, // 6 Sheep
-			SHEEP,
-			SHEEP,
-			SHEEP,
-			SHEEP,
-			SHEEP,
-			WHEAT, // 6 Wheat
-			WHEAT,
-			WHEAT,
-			WHEAT,
-			WHEAT,
-			WHEAT,
-			WOOD,  // 6 Wood
-			WOOD,
-			WOOD,
-			WOOD,
-			WOOD,
-			WOOD,
-			ROCK,  // 5 Rock
-			ROCK,
-			ROCK,
-			ROCK,
-			ROCK,
-			CLAY,  // 5 Clay
-			CLAY,
-			CLAY,
-			CLAY,
-			CLAY,
-			DESERT, // 2 Desert
-			DESERT];
+const XLARGE_AVAILABLE_RESOURCES = [
+	SHEEP, // 6 Sheep
+	SHEEP,
+	SHEEP,
+	SHEEP,
+	SHEEP,
+	SHEEP,
+	WHEAT, // 6 Wheat
+	WHEAT,
+	WHEAT,
+	WHEAT,
+	WHEAT,
+	WHEAT,
+	WOOD,  // 6 Wood
+	WOOD,
+	WOOD,
+	WOOD,
+	WOOD,
+	WOOD,
+	ROCK,  // 5 Rock
+	ROCK,
+	ROCK,
+	ROCK,
+	ROCK,
+	CLAY,  // 5 Clay
+	CLAY,
+	CLAY,
+	CLAY,
+	CLAY,
+	DESERT, // 2 Desert
+	DESERT,
+];
 
 /**
  * XLARGE BOARD (6 ppl) List of how many of harbors there are (desert is 3:1)
  */
-const XLARGE_AVAILABLE_HARBORS = [SHEEP,  // 2 Sheep 2:1's
-			SHEEP,
-			WHEAT,  // 1 Wheat 2:1
-			WOOD,   // 1 Wood 2:1
-			ROCK,   // 1 Rock 2:1
-			CLAY,   // 1 Clay 2:1
-			DESERT, // 5 3:1's
-			DESERT,
-			DESERT,
-			DESERT,
-			DESERT];
+const XLARGE_AVAILABLE_HARBORS = [
+	SHEEP,  // 2 Sheep 2:1's
+	SHEEP,
+	WHEAT,  // 1 Wheat 2:1
+	WOOD,   // 1 Wood 2:1
+	ROCK,   // 1 Rock 2:1
+	CLAY,   // 1 Clay 2:1
+	DESERT, // 5 3:1's
+	DESERT,
+	DESERT,
+	DESERT,
+	DESERT,
+];
 
 /**
  * XLARGE BOARD (6 ppl) The (x,y) pixels of the TL corner of each land hexagon for drawing purposes.
  */
-const XLARGE_LAND_GRID = [new Point(5,1),  // 0
-		new Point(7,1),  // 1
-		new Point(9,1),  // 2
-		new Point(4,2),  // 3
-		new Point(6,2),  // 4
-		new Point(8,2),  // 5
-		new Point(10,2), // 6
-		new Point(3,3),  // 7
-		new Point(5,3),  // 8
-		new Point(7,3),  // 9
-		new Point(9,3),  // 10
-		new Point(11,3), // 11
-		new Point(2,4),  // 12
-		new Point(4,4),  // 13
-		new Point(6,4),  // 14
-		new Point(8,4),  // 15
-		new Point(10,4), // 16
-		new Point(12,4), // 17
-		new Point(3,5),  // 18
-		new Point(5,5),  // 19
-		new Point(7,5),  // 20
-		new Point(9,5),  // 21
-		new Point(11,5), // 22
-		new Point(4,6),  // 23
-		new Point(6,6),  // 24
-		new Point(8,6),  // 25
-		new Point(10,6), // 26
-		new Point(5,7),  // 27
-		new Point(7,7),  // 28
-		new Point(9,7)]; // 29
+const XLARGE_LAND_GRID = [
+	new Point(5,1),  // 0
+	new Point(7,1),  // 1
+	new Point(9,1),  // 2
+	new Point(4,2),  // 3
+	new Point(6,2),  // 4
+	new Point(8,2),  // 5
+	new Point(10,2), // 6
+	new Point(3,3),  // 7
+	new Point(5,3),  // 8
+	new Point(7,3),  // 9
+	new Point(9,3),  // 10
+	new Point(11,3), // 11
+	new Point(2,4),  // 12
+	new Point(4,4),  // 13
+	new Point(6,4),  // 14
+	new Point(8,4),  // 15
+	new Point(10,4), // 16
+	new Point(12,4), // 17
+	new Point(3,5),  // 18
+	new Point(5,5),  // 19
+	new Point(7,5),  // 20
+	new Point(9,5),  // 21
+	new Point(11,5), // 22
+	new Point(4,6),  // 23
+	new Point(6,6),  // 24
+	new Point(8,6),  // 25
+	new Point(10,6), // 26
+	new Point(5,7),  // 27
+	new Point(7,7),  // 28
+	new Point(9,7),
+]; // 29
 
 /**
  * XLARGE BOARD (6 ppl) The (x,y) pixels of the TL corner of each ocean hexagon for drawing purposes.
  */
-const XLARGE_WATER_GRID = [new Point(4,0),  // 0
-		new Point(6,0),  // 1
-		new Point(8,0),  // 2
-		new Point(10,0), // 3
-		new Point(11,1), // 4
-		new Point(12,2), // 5
-		new Point(13,3), // 6
-		new Point(14,4), // 7
-		new Point(13,5), // 8
-		new Point(12,6), // 9
-		new Point(11,7), // 10
-		new Point(10,8), // 11
-		new Point(8,8),  // 12
-		new Point(6,8),  // 13
-		new Point(4,8),  // 14
-		new Point(3,7),  // 15
-		new Point(2,6),  // 16
-		new Point(1,5),  // 17
-		new Point(0,4),  // 18
-		new Point(1,3),  // 19
-		new Point(2,2),  // 20
-		new Point(3,1)]; // 21
+const XLARGE_WATER_GRID = [
+	new Point(4,0),  // 0
+	new Point(6,0),  // 1
+	new Point(8,0),  // 2
+	new Point(10,0), // 3
+	new Point(11,1), // 4
+	new Point(12,2), // 5
+	new Point(13,3), // 6
+	new Point(14,4), // 7
+	new Point(13,5), // 8
+	new Point(12,6), // 9
+	new Point(11,7), // 10
+	new Point(10,8), // 11
+	new Point(8,8),  // 12
+	new Point(6,8),  // 13
+	new Point(4,8),  // 14
+	new Point(3,7),  // 15
+	new Point(2,6),  // 16
+	new Point(1,5),  // 17
+	new Point(0,4),  // 18
+	new Point(1,3),  // 19
+	new Point(2,2),  // 20
+	new Point(3,1),
+]; // 21
 
 let sprites = [];
 let hexesToPoints = {};
@@ -398,35 +480,48 @@ let harbor_map = [];
 let help_text = new TextField();
 let help_text_format = new TextFormat();
 
-generate_map_button.addEventListener(MouseEvent.CLICK, generateMap);
-shuffle_probabilities_button.addEventListener(MouseEvent.CLICK, shuffleProbabilities);
-shuffle_harbors_button.addEventListener(MouseEvent.CLICK, shuffleHarbors);
-standard_radio.addEventListener(MouseEvent.CLICK, shiftToStandard);
-large_radio.addEventListener(MouseEvent.CLICK, shiftToLarge);
-xlarge_radio.addEventListener(MouseEvent.CLICK, shiftToXlarge);
-reset_map_button.addEventListener(MouseEvent.CLICK, resetMap);
+const generate_map_button = document.getElementById('generate_map_button');
+generate_map_button.addEventListener('click', generateMap);
+
+const shuffle_probabilities_button = document.getElementById('shuffle_probabilities_button');
+shuffle_probabilities_button.addEventListener('click', shuffleProbabilities);
+
+const shuffle_harbors_button = document.getElementById('shuffle_harbors_button');
+shuffle_harbors_button.addEventListener('click', shuffleHarbors);
+
+const standard_radio = document.getElementById('standard_radio');
+standard_radio.addEventListener('click', shiftToStandard);
+
+const large_radio = document.getElementById('standard_radio');
+large_radio.addEventListener('click', shiftToLarge);
+
+const xlarge_radio = document.getElementById('xlarge_radio');
+xlarge_radio.addEventListener('click', shiftToXlarge);
+
+const reset_map_button = document.getElementById('reset_map_button');
+reset_map_button.addEventListener('click', resetMap);
 
 /*
-let file:FileReference = new FileReference();
-upload_file_button.addEventListener(MouseEvent.CLICK, uploadFile);
+let file = new FileReference();
+upload_file_button.addEventListener('click', uploadFile);
 file.addEventListener(Event.SELECT, selectFile);
 
-let xml_loader:URLLoader = new URLLoader();
+let xml_loader = new URLLoader();
 xml_loader.addEventListener(Event.COMPLETE, loadCustomMap);
 
-function uploadFile(evt:Event) {
+function uploadFile(evt) {
 	//file.browse(new Array(new FileFilter("Maps", "*.map")));
 	xml_loader.load(new URLRequest("standard.map"));
 }
 
-function loadCustomMap(evt:Event) {
-	let xml:XML = new XML(evt.target.data);
-	trace(xml);
+function loadCustomMap(evt) {
+	let xml = new XML(evt.target.data);
+	console.log(xml);
 }
 
-function selectFile(evt:Event) {
+function selectFile(evt) {
 	file = FileReference(evt.target);
-	//trace("File chosen:" + file.name + ", size: " + file.size);
+	//console.log("File chosen:" + file.name + ", size: " + file.size);
 }
 */
 
@@ -512,7 +607,7 @@ function generateMap(evt) {
 			available_resources = [];
 			available_harbors = [];
 
-			for (l=0; l < land_len; l++) {
+			for (let l = 0; l < land_len; l++) {
 				available_probabilities.push(DEFAULT_AVAILABLE_PROBABILITIES[l]);
 				available_resources.push(DEFAULT_AVAILABLE_RESOURCES[l]);
 			}
@@ -591,13 +686,15 @@ function generate() {
 }
 
 function createGlobalMap(showGrid) {
-	for (let a=0; a<the_map.length; a++) {
+	for (let a = 0; a < the_map.length; a++) {
 		the_map[a] = new Array(BOARD_RANGE_Y_VALUE+1);
 	}
-	for (let i=0; i<=BOARD_RANGE_Y_VALUE; i++) {
-		for (let j=(i%2); j<=BOARD_RANGE_X_VALUE; j+=2) {
-			let temp = new Point((xd*j)+STARTING_X_VALUE,
-			  (ydt*i)+STARTING_Y_VALUE);
+	for (let i = 0; i <= BOARD_RANGE_Y_VALUE; i++) {
+		for (let j = (i%2); j <= BOARD_RANGE_X_VALUE; j+=2) {
+			let temp = new Point(
+				(xd*j)+STARTING_X_VALUE,
+				(ydt*i)+STARTING_Y_VALUE,
+			);
 			the_map[j][i] = temp;
 			if (showGrid) {
 				/*
@@ -627,7 +724,7 @@ function createGlobalMap(showGrid) {
 		help_text_format.font = "courier new";
 		help_text_format.size = 16;
 		help_text_format.bold = true;
-		help_text.autoSize = TextFieldAutoSize.LEFT;
+		help_text.autoSize = 'left';
 		help_text.x = 125;
 		help_text.y = 60;
 		help_text.setTextFormat(help_text_format);
@@ -737,7 +834,8 @@ function getProbabilities() {
 			}
 		}
 
-		// Try out to see if a) any resource has two of the same numbers or
+		// Try out to see if
+		// a) any resource has two of the same numbers or
 		// b) the probability of a single resource is too high or low or
 		// c) within each resource, no one tile has more than half the probability
 		//
@@ -1048,7 +1146,7 @@ function drawBoard(blank) {
 		let pt = new Point();
 		pt.x = the_map[a][b].x;
 		pt.y = the_map[a][b].y;
-		//trace("a: " + a + " b: " + b + " x: " + pt.x + " y: " + pt.y);
+		//console.log("a: " + a + " b: " + b + " x: " + pt.x + " y: " + pt.y);
 		if (blank) {
 			drawHex(pt.x, pt.y, BLANK /* gray */, null, null);
 		} else if (resource_map[i] === DESERT) {
@@ -1064,7 +1162,7 @@ function drawBoard(blank) {
 		let pt2 = new Point();
 		pt2.x = the_map[c][d].x;
 		pt2.y = the_map[c][d].y;
-		//trace("a: " + a + " b: " + b + " x: " + pt.x + " y: " + pt.y);
+		//console.log("a: " + a + " b: " + b + " x: " + pt.x + " y: " + pt.y);
 		if (blank) {
 			let tmp_harbor_map = [];
 			tmp_harbor_map[0] = WATER;
@@ -1077,19 +1175,11 @@ function drawBoard(blank) {
 
 function drawWaterHex(x, y, harbor_point) {
 	let hex = new Sprite();
-	hex.graphics.lineStyle(2, 0xFFFFFF);
-	hex.graphics.beginFill(WATER);
-	hex.graphics.moveTo(x, y);
-	hex.graphics.lineTo(x+xd, y+yd1);
-	hex.graphics.lineTo(x+xd, y+yd1+yd2);
-	hex.graphics.lineTo(x, y+yd1+yd2+yd1);
-	hex.graphics.lineTo(x-xd, y+yd1+yd2);
-	hex.graphics.lineTo(x-xd, y+yd1);
-	hex.graphics.lineTo(x, y);
-	//hex.addEventListener(MouseEvent.MOUSE_DOWN, dragDown);
-	//hex.addEventListener(MouseEvent.MOUSE_UP, dragUp);
-	//hex.addEventListener(MouseEvent.CLICK, clickHex);
-	//hex.addEventListener(MouseEvent.ROLL_OVER, rollOverHex);
+	hex.drawHexagon(x, y, WATER);
+	//hex.addEventListener('mousedown', dragDown);
+	//hex.addEventListener('mouseup', dragUp);
+	//hex.addEventListener('click', clickHex);
+	//hex.addEventListener('mouseover', rollOverHex);
 	let hex_baggage = [];
 	if (harbor_point[0] !== WATER) {
 		let harbor = getHarborLines(x, y, harbor_point);
@@ -1166,20 +1256,13 @@ function getHarborNumber(x, y, color) {
 	return txt;
 }
 
+
 function drawHex(x, y, color, prob, field) {
 	let hex = new Sprite();
-	hex.graphics.lineStyle(2, 0xFFFFFF);
-	hex.graphics.beginFill(color);
-	hex.graphics.moveTo(x, y);
-	hex.graphics.lineTo(x+xd, y+yd1);
-	hex.graphics.lineTo(x+xd, y+yd1+yd2);
-	hex.graphics.lineTo(x, y+yd1+yd2+yd1);
-	hex.graphics.lineTo(x-xd, y+yd1+yd2);
-	hex.graphics.lineTo(x-xd, y+yd1);
-	hex.graphics.lineTo(x, y);
-	//hex.addEventListener(MouseEvent.MOUSE_DOWN, pressDown);
-	//hex.addEventListener(MouseEvent.MOUSE_UP, dragUp);
-	hex.addEventListener(MouseEvent.CLICK, clickLandHex);
+	hex.drawHexagon(x, y, color);
+	//hex.addEventListener('mousedown', pressDown);
+	//hex.addEventListener('mouseup', dragUp);
+	hex.addEventListener('click', clickLandHex);
 	//hex.addEventListener(MouseEvent.MOUSE_OVER, rollOverHex);
 	let hex_baggage = [];
 	if (prob != null) {
@@ -1312,23 +1395,23 @@ function clickLandHex(evt) {
 	if (map_type === CUSTOM) {
 		let realPoint = pointToGridPoint(p);
 		if (color === LAND) {
-			//trace("land added: " + realPoint);
+			//console.log("land added: " + realPoint);
 			land_grid.push(realPoint);
 		}
 		if (hexesToColor[evt.currentTarget] === LAND) {
-			//trace("land removed: " + realPoint);
+			//console.log("land removed: " + realPoint);
 			removePointFromArray(realPoint, land_grid);
 		}
 		if (color === WATER) {
-			//trace("water added: " + realPoint);
+			//console.log("water added: " + realPoint);
 			water_grid.push(realPoint);
 		}
 		if (hexesToColor[evt.currentTarget] === WATER) {
-			//trace("water removed: " + realPoint);
+			//console.log("water removed: " + realPoint);
 			removePointFromArray(realPoint, water_grid);
 		}
-		//trace("land_len: " + land_grid.length);
-		//trace("water_len: " + water_grid.length);
+		//console.log("land_len: " + land_grid.length);
+		//console.log("water_len: " + water_grid.length);
 	}
 }
 
