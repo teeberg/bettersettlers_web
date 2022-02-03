@@ -55,17 +55,6 @@ const sizeHandlers = {
 	'xlarge': shiftToXlarge,
 }
 
-function init() {
-	const size = getQueryArg('size', 'standard');
-	let elements = document.getElementsByName('size');
-	elements.forEach((elem) => {
-		if (elem.id === `${size}_radio`) {
-			elem.checked = true;
-			sizeHandlers[size]();
-		}
-	});
-}
-
 
 let xd = 40;
 let two_xd = xd * 2;
@@ -462,7 +451,7 @@ const XLARGE_WATER_GRID = [
 ]; // 21
 
 let sprites = [];
-let hexesToPoints = {};
+let hexesToPoints = new WeakMap();
 let hexesToColor = {}
 let hexesBaggage = {};
 let hexes = [];
@@ -509,6 +498,9 @@ function svgText(x, y, className, contents, options) {
 		'y': y,
 		'class': className,
 	}
+	if (options.mouseEnabled !== true) {
+		attrs['pointer-events'] = 'none';
+	}
 	for (const [key, value] of Object.entries(attrs)) {
 		text.setAttribute(key, value);
 	}
@@ -532,11 +524,11 @@ function svgLine(start, end, thickness, color, options) {
 		'x2': end.x,
 		'y2': end.y,
 	}
+	if (options.mouseEnabled !== true) {
+		attrs['pointer-events'] = 'none';
+	}
 	for (const [key, value] of Object.entries(attrs)) {
 		line.setAttribute(key, value);
-	}
-	if (options.mouseEnabled === false) {
-		line.setAttribute('pointer-events', 'none')
 	}
 
 	line.style.strokeWidth = thickness;
@@ -651,9 +643,21 @@ available_resources = STANDARD_AVAILABLE_RESOURCES;
 available_harbors = STANDARD_AVAILABLE_HARBORS;
 land_grid = STANDARD_LAND_GRID;
 water_grid = STANDARD_WATER_GRID;
-calculateOthers();
-createGlobalMap(false /* showGrid */);
-generateMap(null);
+
+
+function init() {
+	createGlobalMap(false /* showGrid */);
+
+	const size = getQueryArg('size', 'standard');
+	let elements = document.getElementsByName('size');
+	elements.forEach((elem) => {
+		if (elem.id === `${size}_radio`) {
+			elem.checked = true;
+			sizeHandlers[size]();
+		}
+	});
+}
+
 
 function calculateOthers() {
 	num_of_sheep = getNumberOf(SHEEP, available_resources);
@@ -1303,7 +1307,7 @@ function drawWaterHex(x, y, harbor_point) {
 	}
 	// stage.addChildAt(hex, 0);
 	sprites.push(hex);
-	hexesToPoints[hex] = new Point(x, y);
+	hexesToPoints.set(hex, new Point(x, y));
 	hexesToColor[hex] = harbor_point[0];
 	hexesBaggage[hex] = hex_baggage;
 	hexes.push(hex);
@@ -1371,6 +1375,10 @@ function drawHex(x, y, color, prob, field) {
 	let hex = svgTile(x, y, color);
 	//hex.addEventListener('mousedown', pressDown);
 	//hex.addEventListener('mouseup', dragUp);
+	hex.addEventListener('mousedown', (e) => {
+		// Disable text selection when double-clicking hex
+		e.preventDefault();
+	})
 	hex.addEventListener('click', clickLandHex);
 	//hex.addEventListener(MouseEvent.MOUSE_OVER, rollOverHex);
 	let hex_baggage = [];
@@ -1398,7 +1406,7 @@ function drawHex(x, y, color, prob, field) {
 	}
 	// stage.addChildAt(hex, 0);
 	sprites.push(hex);
-	hexesToPoints[hex] = new Point(x, y);
+	hexesToPoints.set(hex, new Point(x, y));
 	hexesToColor[hex] = color;
 	hexesBaggage[hex] = hex_baggage;
 	hexes.push(hex);
@@ -1457,13 +1465,13 @@ function cleanUp(hideHelpText) {
 		helpText.style.visibility = 'hidden';
 	}
 	svg.innerHTML = '';
-	hexesToPoints = {};
+	hexesToPoints = new WeakMap();
 	hexesToColor = {};
 	hexesBaggage = {};
 }
 
 function clickLandHex(evt) {
-	let p = hexesToPoints[evt.currentTarget];
+	let p = hexesToPoints.get(evt.currentTarget);
 	let color = RESOURCE_CYCLE[hexesToColor[evt.currentTarget]];
 	if (hexesToColor[evt.currentTarget] !== DESERT) {
 		// stage.removeChild(evt.currentTarget);
@@ -1490,6 +1498,7 @@ function clickLandHex(evt) {
 		//console.log("land_len: " + land_grid.length);
 		//console.log("water_len: " + water_grid.length);
 	}
+	return false;
 }
 
 function getAllLandNeighbors(arrayOfPoints) {
