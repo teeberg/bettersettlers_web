@@ -1,4 +1,16 @@
 <style>
+    div#left {
+        padding: 10px;
+        float: left;
+        width: 200px;
+    }
+    div#right {
+        padding: 10px;
+        margin-left: 240px;
+    }
+    div#help {
+        visibility: hidden;
+    }
     polygon:hover {
         /*fill: #fff !important;*/
     }
@@ -7,7 +19,7 @@
         font-family: Courier New, monospace;
         font-size: 16pt;
         font-weight: bold;
-        text-anchor: left;
+        text-anchor: start;
     }
     text.prob {
         font-family: Courier New, monospace;
@@ -18,31 +30,39 @@
     }
 </style>
 
-<button id="generate_map_button">Generate Map</button>
-<br>
-<button id="shuffle_probabilities_button">Shuffle Probabilities</button>
-<br>
-<button id="shuffle_harbors_button">Shuffle Harbors</button>
-<br>
+<div id="left">
+    <button id="generate_map_button">Generate Map</button>
+    <br>
+    <button id="shuffle_probabilities_button">Shuffle Probabilities</button>
+    <br>
+    <button id="shuffle_harbors_button">Shuffle Harbors</button>
+    <br>
 
-<input name="size" type="radio" id="standard_radio" checked>
-<label for="standard_radio">Standard (3-4 people)</label>
-<br>
+    <input name="size" type="radio" id="standard_radio" checked>
+    <label for="standard_radio">Standard (3-4 people)</label>
+    <br>
 
-<input name="size" type="radio" id="large_radio">
-<label for="large_radio">Large (5 people)</label>
-<br>
+    <input name="size" type="radio" id="large_radio">
+    <label for="large_radio">Large (5 people)</label>
+    <br>
 
-<input name="size" type="radio" id="xlarge_radio">
-<label for="xlarge_radio">Extra-Large (6 people)</label>
+    <input name="size" type="radio" id="xlarge_radio">
+    <label for="xlarge_radio">Extra-Large (6 people)</label>
 
-<br>
+    <br>
 
-<button id="reset_map_button">Reset Map</button>
-<br>
+    <button id="reset_map_button">Reset Map</button>
+</div>
 
-<svg height="800" width="800" id="svg">
-</svg>
+<div id="right">
+    <div id="help">
+        Click a hex once for land and twice for ocean.<br>
+        Click 'Generate Map' when done for a fair map!
+    </div>
 
-<canvas id="canvas" width="800" height="800" style="display: none"></canvas>
+    <div id="map">
+        <svg height="648" width="640" id="svg"></svg>
+    </div>
+</div>
+
 <script type="text/javascript" src="Settlers.js"></script>

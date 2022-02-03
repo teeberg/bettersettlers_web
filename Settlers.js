@@ -73,6 +73,9 @@ let yd1 = 27;
 let yd2 = 42;
 let ydt = yd1 + yd2;
 
+let tileWidth = two_xd;
+let tileHeight = yd2 + yd1 * 2;
+
 const STANDARD = -1;
 const LARGE = -2;
 const XLARGE = -3;
@@ -98,8 +101,8 @@ RESOURCE_CYCLE[BLANK] = LAND;
 RESOURCE_CYCLE[LAND] = WATER;
 RESOURCE_CYCLE[WATER] = BLANK;
 
-const STARTING_X_VALUE = 190;
-const STARTING_Y_VALUE = 120;
+const STARTING_X_VALUE = xd;
+const STARTING_Y_VALUE = 0;
 
 const BOARD_RANGE_X_VALUE = 14;
 const BOARD_RANGE_Y_VALUE = 8;
@@ -471,8 +474,7 @@ let harbor_map = [];
 
 const svg = document.getElementById('svg');
 
-const canvas = document.getElementById('canvas');
-const canvasContext = canvas.getContext('2d');
+const helpText = document.getElementById('help');
 
 const generate_map_button = document.getElementById('generate_map_button');
 generate_map_button.addEventListener('click', generateMap);
@@ -838,14 +840,7 @@ function createGlobalMap(showGrid) {
 		}
 	}
 	if (showGrid) {
-		// stage.addChild(help_text);
-		svgText(
-			125,
-			60,
-			'help',
-			"Click a hex once for land and twice for ocean.<br>"
-		    + "Click 'Generate Map' when done for a fair map!"
-		)
+		helpText.style.visibility = 'visible';
 	}
 }
 
@@ -1457,16 +1452,11 @@ function nextInt(n) {
 	return Math.floor(Math.random()*n);
 }
 
-function cleanUp(help) {
-	// if (help && stage.contains(help_text)) {
-	// 	stage.removeChild(help_text);
-	// }
-	while (sprites.length > 0) {
-		let tmp_sprite = sprites.pop();
-		// if (stage.contains(tmp_sprite)) {
-		// 	stage.removeChild(tmp_sprite);
-		// }
+function cleanUp(hideHelpText) {
+	if (hideHelpText) {
+		helpText.style.visibility = 'hidden';
 	}
+	svg.innerHTML = '';
 	hexesToPoints = {};
 	hexesToColor = {};
 	hexesBaggage = {};
